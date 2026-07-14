@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Minha Empresa · Sala de Atendimento</title>
+  <style>
+    :root { --brand: #6d28d9; --brand-ink: #ffffff; --bg: #0f0d17; --panel: #1a1626; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: #eee; }
+    header { display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: var(--panel); border-bottom: 1px solid #2a2438; }
+    header .logo { width: 34px; height: 34px; border-radius: 9px; background: var(--brand); display: grid; place-items: center; font-weight: 800; color: var(--brand-ink); }
+    header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .2px; }
+    header .spacer { flex: 1; }
+    header .badge { font-size: 12px; color: #b9a9e6; }
+    main { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
+    #video { aspect-ratio: 16 / 9; width: 100%; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+    .bar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+    button { border: 0; border-radius: 12px; padding: 12px 18px; font-size: 15px; font-weight: 600; cursor: pointer; background: var(--panel); color: #eee; transition: transform .05s, background .15s; }
+    button:hover { background: #241d33; }
+    button:active { transform: scale(.97); }
+    button.primary { background: var(--brand); color: var(--brand-ink); }
+    button.danger { background: #dc2626; color: #fff; }
+    .meta { text-align: center; margin-top: 14px; font-size: 13px; color: #9b8bc7; min-height: 18px; }
+  </style>
+</head>
+<body>
+  <!-- Este é um EXEMPLO de "interface com a sua cara": todo o cabeçalho, os botões
+       e o layout são seus; o vídeo vem do videochamada.com.br via iframe controlado
+       pelo SDK. Troque baseUrl/callId por valores reais para conectar de verdade. -->
+  <header>
+    <div class="logo">M</div>
+    <h1>Minha Empresa · Sala de Atendimento</h1>
+    <div class="spacer"></div>
+    <div class="badge" id="badge">desconectado</div>
+  </header>
+
+  <main>
+    <div id="video"></div>
+
+    <div class="bar">
+      <button class="primary" id="mic">🎤 Microfone</button>
+      <button class="primary" id="cam">📹 Câmera</button>
+      <button id="screen">🖥️ Compartilhar tela</button>
+      <button id="chat">💬 Chat</button>
+      <button id="layout">🔲 Layout</button>
+      <button class="danger" id="hangup">📞 Encerrar</button>
+    </div>
+    <div class="meta" id="meta">Aguardando participantes…</div>
+  </main>
+
+  <script type="module">
+    // Em produção: import { VideochamadaCall } from '@videochamada/embed'
+    import { VideochamadaCall } from '../src/index.js';
+
+    const call = new VideochamadaCall({
+      container: '#video',
+      baseUrl: 'https://sua-org.videochamada.com.br', // troque pelo seu subdomínio/domínio
+      callId: 'DEMO_CALL_ID',                          // troque pelo id de POST /api/calls
+      username: 'Atendente',
+      hideControls: true,                              // usamos os botões abaixo
+    });
+
+    const badge = document.getElementById('badge');
+    const meta = document.getElementById('meta');
+
+    call.on('ready', () => { badge.textContent = 'conectado'; });
+    call.on('status', (s) => {
+      document.getElementById('mic').style.opacity = s.audioEnabled === false ? .5 : 1;
+      document.getElementById('cam').style.opacity = s.videoEnabled === false ? .5 : 1;
+      meta.textContent = `${s.participantCount ?? 0} participante(s)` + (s.isRecording ? ' · gravando' : '');
+    });
+    call.on('participantJoined', (p) => { meta.textContent = `${p?.name || 'Alguém'} entrou`; });
+    call.on('participantLeft', () => call.getStatus().catch(() => {}));
+    call.on('callEnded', () => { badge.textContent = 'encerrado'; });
+
+    document.getElementById('mic').onclick = () => call.toggleAudio();
+    document.getElementById('cam').onclick = () => call.toggleVideo();
+    document.getElementById('screen').onclick = () => call.toggleScreenShare();
+    document.getElementById('chat').onclick = () => call.toggleChat();
+    document.getElementById('layout').onclick = () => call.setLayout(
+      call.status.layoutMode === 'mosaic' ? 'sidebar' : 'mosaic'
+    );
+    document.getElementById('hangup').onclick = () => call.endCall();
+  </script>
+</body>
+</html>

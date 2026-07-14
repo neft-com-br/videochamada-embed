@@ -1,0 +1,45 @@
+{
+  "name": "@videochamada/embed",
+  "version": "0.1.0",
+  "description": "Official embed SDK for videochamada.com.br — mount a video call in your own page and build the interface with your own look.",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "files": [
+    "src/index.js",
+    "src/index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node test/smoke.mjs",
+    "typecheck": "tsc --noEmit --allowJs --checkJs false src/index.d.ts"
+  },
+  "keywords": [
+    "videochamada",
+    "video call",
+    "webrtc",
+    "embed",
+    "iframe",
+    "sdk",
+    "white-label",
+    "cpaas"
+  ],
+  "homepage": "https://videochamada.com.br",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neft-com-br/videochamada-embed.git"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
