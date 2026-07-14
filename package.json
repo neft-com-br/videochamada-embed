@@ -1,6 +1,6 @@
 {
   "name": "@videochamada/embed",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Official embed SDK for videochamada.com.br — mount a video call in your own page and build the interface with your own look.",
   "type": "module",
   "main": "./src/index.js",
@@ -10,7 +10,8 @@
     ".": {
       "types": "./src/index.d.ts",
       "import": "./src/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "src/index.js",

@@ -97,6 +97,10 @@ export class VideochamadaCall {
     this.baseUrl = options.baseUrl;
     this.expectedOrigin = originOf(options.baseUrl);
 
+    /** @type {import('./index').CallTheme | null} */
+    this.theme = options.theme || null;
+    this._themeSent = false;
+
     /** @type {import('./index').CallStatus} */
     this.status = {};
     /** @type {Map<string, Set<Function>>} */
@@ -129,12 +133,20 @@ export class VideochamadaCall {
   /** @param {MessageEvent} event */
   _handleMessage(event) {
     if (this._destroyed) return;
+    // Only react to OUR iframe — otherwise multiple calls on one page cross-talk.
+    if (this.iframe && event.source !== this.iframe.contentWindow) return;
     // Only accept messages from the call origin (skip check for wildcard base).
     if (this.expectedOrigin !== '*' && event.origin !== this.expectedOrigin) return;
     const data = event.data;
     if (!data || typeof data !== 'object') return;
 
     if (data.type === 'videocall-status' && data.status) {
+      // The first status proves the call app's bridge is alive — safe to push
+      // the initial theme now (the iframe 'load' event fires too early).
+      if (this.theme && !this._themeSent) {
+        this._themeSent = true;
+        this.send('setTheme', this.theme);
+      }
       this.status = data.status;
       this._emit('status', data.status);
       const waiters = this._statusWaiters.splice(0);
@@ -183,6 +195,12 @@ export class VideochamadaCall {
   setLayout(layout) { this.send('changeLayout', { layout }); }
   openLayoutDialog() { this.send('openLayoutDialog'); }
   openSettings() { this.send('openSettings'); }
+  /**
+   * Apply theme tokens to the call UI (colors, background, control bar, tiles, font).
+   * Only the documented keys are honored; unknown keys are ignored by the app.
+   * @param {import('./index').CallTheme} theme
+   */
+  setTheme(theme) { this.theme = theme; this._themeSent = true; this.send('setTheme', theme); }
   toggleConnectionStatus() { this.send('toggleConnectionStatus'); }
   endCall() { this.send('endCall'); }
 

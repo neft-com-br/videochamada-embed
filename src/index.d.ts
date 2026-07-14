@@ -33,9 +33,40 @@ export interface CallUrlOptions {
   features?: CallFeatures;
 }
 
+/**
+ * Theme tokens applied inside the call UI. Every value is a plain CSS value
+ * (color, length, or font-family list). Unknown keys are ignored by the app.
+ */
+export interface CallTheme {
+  /** Background of the call/video area. */
+  background?: string;
+  /** Panels/surfaces (chat, dialogs). */
+  surface?: string;
+  /** Control bar background. */
+  controlBarBackground?: string;
+  /** Standard control button background. */
+  buttonBackground?: string;
+  /** Control button text/icon color. */
+  buttonText?: string;
+  /** Accent / primary color for highlights. */
+  accent?: string;
+  /** End-call (hang up) button background. */
+  endCallBackground?: string;
+  /** Video tile background. */
+  tileBackground?: string;
+  /** Video tile corner radius (e.g. '14px'). */
+  tileRadius?: string;
+  /** Main text color. */
+  textColor?: string;
+  /** Font family list (e.g. 'Inter, sans-serif'). */
+  font?: string;
+}
+
 export interface VideochamadaCallOptions extends CallUrlOptions {
   /** Where to mount the iframe: a CSS selector or an element. */
   container: string | HTMLElement;
+  /** Theme tokens applied to the call UI on load. */
+  theme?: CallTheme;
   /** iframe width (number = px). Default '100%'. */
   width?: number | string;
   /** iframe height (number = px). Default '100%'. */
@@ -100,6 +131,8 @@ export class VideochamadaCall {
   setLayout(layout: 'mosaic' | 'sidebar'): void;
   openLayoutDialog(): void;
   openSettings(): void;
+  setTheme(theme: CallTheme): void;
+  theme: CallTheme | null;
   toggleConnectionStatus(): void;
   endCall(): void;
 

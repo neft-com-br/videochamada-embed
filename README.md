@@ -105,6 +105,36 @@ desligado no painel, a URL não consegue religar (o banco vence).
 
 `CallStatus`: `{ audioEnabled, videoEnabled, screenShareEnabled, chatOpen, handRaised, layoutMode, participantCount, isRecording, connectionStatusVisible }`.
 
+## Tema / white-label (deixar com a sua cara)
+
+Passe um `theme` para restilizar a chamada por dentro (fundo, barra de controles,
+botões, tiles de vídeo, cantos, fonte) — sem mexer na nossa marcação interna.
+
+```js
+const call = new VideochamadaCall({
+  container: '#video', baseUrl, callId, hideControls: true,
+  theme: {
+    background: '#0b1220',
+    controlBarBackground: '#111a2e',
+    buttonBackground: '#0ea5a4',
+    buttonText: '#04121a',
+    accent: '#0ea5a4',            // também aplica na paleta primária (chat, sala de espera)
+    endCallBackground: '#e11d48',
+    tileBackground: '#0f172a',
+    tileRadius: '18px',
+    textColor: '#e6edf7',
+    font: 'Inter, sans-serif',
+  },
+});
+
+// também dá pra trocar em tempo real:
+call.setTheme({ accent: '#9333ea', controlBarBackground: '#1e1b4b' });
+```
+
+Todos os campos são opcionais; o que você não passar mantém o padrão. Só valores
+CSS seguros são aceitos (o app rejeita `url()`, `@import` e caracteres que quebram
+a regra). Requer o app da chamada com suporte a tema (setTheme).
+
 ## Exemplo com React
 
 ```jsx
