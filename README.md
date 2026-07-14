@@ -105,6 +105,41 @@ desligado no painel, a URL não consegue religar (o banco vence).
 
 `CallStatus`: `{ audioEnabled, videoEnabled, screenShareEnabled, chatOpen, handRaised, layoutMode, participantCount, isRecording, connectionStatusVisible }`.
 
+## Exemplo com React
+
+```jsx
+import { useEffect, useRef, useState } from 'react';
+import { VideochamadaCall } from '@videochamada/embed';
+
+export function Call({ baseUrl, callId, username }) {
+  const box = useRef(null);
+  const call = useRef(null);
+  const [status, setStatus] = useState({});
+
+  useEffect(() => {
+    const c = new VideochamadaCall({ container: box.current, baseUrl, callId, username, hideControls: true });
+    c.on('status', setStatus);
+    call.current = c;
+    return () => c.destroy();
+  }, [baseUrl, callId, username]);
+
+  return (
+    <div>
+      <div ref={box} style={{ aspectRatio: '16 / 9' }} />
+      <button onClick={() => call.current.toggleAudio()}>{status.audioEnabled === false ? 'Ativar mic' : 'Mutar'}</button>
+      <button onClick={() => call.current.toggleVideo()}>Câmera</button>
+      <button onClick={() => call.current.endCall()}>Encerrar</button>
+    </div>
+  );
+}
+```
+
+## Rodar sem backend (demo local)
+
+Dá pra ver o SDK funcionando end-to-end sem uma chamada real — veja
+[`examples/local-demo`](examples/local-demo) (um servidor mock que fala o mesmo
+protocolo do app de verdade).
+
 ## Segurança
 
 O SDK só aceita mensagens vindas da origem de `baseUrl` e envia comandos para essa mesma origem.

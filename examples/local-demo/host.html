@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clínica Aurora · Teleconsulta</title>
+  <style>
+    :root { --brand:#0ea5a4; --ink:#fff; --bg:#0b1220; --panel:#111a2e; }
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:#e6edf7}
+    header{display:flex;align-items:center;gap:12px;padding:14px 22px;background:var(--panel);border-bottom:1px solid #1e2a44}
+    header .logo{width:32px;height:32px;border-radius:9px;background:var(--brand);display:grid;place-items:center;font-weight:800;color:var(--ink)}
+    header h1{font-size:15px;margin:0;font-weight:600}
+    header .spacer{flex:1}
+    header .badge{font-size:12px;color:#7fe3e0;border:1px solid #1e3a44;border-radius:999px;padding:3px 10px}
+    main{max-width:1080px;margin:22px auto;padding:0 22px;display:grid;grid-template-columns:1fr 320px;gap:20px}
+    #video{aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+    .bar{grid-column:1;display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+    button{border:0;border-radius:11px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;background:var(--panel);color:#e6edf7}
+    button.primary{background:var(--brand);color:var(--ink)} button.danger{background:#e11d48;color:#fff}
+    aside{grid-row:1 / span 2;background:var(--panel);border-radius:14px;padding:14px;min-height:420px}
+    aside h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#7c8aa5;margin:0 0 10px}
+    #log{font:12px/1.5 ui-monospace,Menlo,monospace;color:#a7f3d0;white-space:pre-wrap;max-height:520px;overflow:auto}
+    .kv{color:#93c5fd}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">A</div>
+    <h1>Clínica Aurora · Teleconsulta</h1>
+    <div class="spacer"></div>
+    <div class="badge" id="badge">conectando…</div>
+  </header>
+
+  <main>
+    <div id="video"></div>
+    <div class="bar">
+      <button class="primary" id="mic">🎤 Microfone</button>
+      <button class="primary" id="cam">📹 Câmera</button>
+      <button id="screen">🖥️ Tela</button>
+      <button id="layout">🔲 Layout</button>
+      <button class="danger" id="hangup">📞 Encerrar</button>
+    </div>
+    <aside>
+      <h2>Log do SDK (eventos reais)</h2>
+      <div id="log"></div>
+    </aside>
+  </main>
+
+  <script type="module">
+    // Import the REAL published artifact, installed from the packed tarball.
+    import { VideochamadaCall, buildCallUrl } from '../../src/index.js';
+
+    const logEl = document.getElementById('log');
+    const log = (m) => { logEl.textContent += m + '\n'; logEl.scrollTop = logEl.scrollHeight; };
+
+    // Prove URL building (real route + hideControls -> controlBar=0)
+    log('iframe URL = ' + buildCallUrl({ baseUrl: location.origin, callId: 'mock', username: 'Atendente', hideControls: true }));
+
+    const call = new VideochamadaCall({
+      container: '#video',
+      baseUrl: location.origin,   // mock served at same origin -> origin check passes
+      callId: 'mock',
+      username: 'Atendente',
+      hideControls: true,
+    });
+    window.__call = call; // for Playwright assertions
+
+    const badge = document.getElementById('badge');
+    call.on('ready', () => { badge.textContent = 'conectado'; log('event: ready'); });
+    call.on('status', (s) => log('event: status  ' + JSON.stringify(s)));
+    call.on('participantJoined', (p) => { badge.textContent = 'em chamada'; log(`event: participantJoined  ${p.name} (${p.participantId})`); });
+    call.on('participantLeft', (p) => log(`event: participantLeft  ${p.participantId}`));
+    call.on('audioToggled', (d) => log(`event: audioToggled  enabled=${d.enabled}`));
+    call.on('videoToggled', (d) => log(`event: videoToggled  enabled=${d.enabled}`));
+    call.on('screenShareToggled', (d) => log(`event: screenShareToggled  enabled=${d.enabled}`));
+    call.on('callEnded', (d) => { badge.textContent = 'encerrada'; log(`event: callEnded  reason=${d.reason}`); });
+
+    document.getElementById('mic').onclick = () => call.toggleAudio();
+    document.getElementById('cam').onclick = () => call.toggleVideo();
+    document.getElementById('screen').onclick = () => call.toggleScreenShare();
+    document.getElementById('layout').onclick = () => call.setLayout(call.status.layoutMode === 'mosaic' ? 'sidebar' : 'mosaic');
+    document.getElementById('hangup').onclick = () => call.endCall();
+
+    // Auto-driver (?auto=1): fire commands on a timeline so a single screenshot
+    // captures the full command -> event round-trip through the real SDK.
+    if (new URLSearchParams(location.search).get('auto') === '1') {
+      log('--- auto-driver: sending commands ---');
+      setTimeout(() => { log('cmd: toggleAudio (mute)');      call.toggleAudio(); }, 1600);
+      setTimeout(() => { log('cmd: toggleScreenShare (start)'); call.startScreenShare(); }, 2100);
+      setTimeout(() => { log('cmd: setLayout(sidebar)');        call.setLayout('sidebar'); }, 2600);
+      setTimeout(async () => { const s = await call.getStatus(); log('getStatus() resolved: participantes=' + s.participantCount); }, 3100);
+      setTimeout(() => { log('cmd: endCall');                   call.endCall(); }, 3600);
+    }
+  </script>
+</body>
+</html>
